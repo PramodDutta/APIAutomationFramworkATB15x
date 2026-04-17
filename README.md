@@ -14,6 +14,7 @@ A robust **API Automation Framework** built using **Rest Assured** for testing t
 * [Framework Flow](#-framework-flow)
 * [Project Structure](#-project-structure)
 * [Setup & Execution](#-setup--execution)
+* [MySQL DB Integration](#-mysql-db-integration)
 * [Parallel Execution](#-parallel-execution)
 * [Integration Tests](#-integration-tests)
 * [Allure Reporting](#-allure-reporting)
@@ -46,6 +47,7 @@ This framework is designed to:
 * 🔄 Jackson API & GSON (JSON parsing)
 * 🪵 Log4j (logging)
 * 📈 Allure Reports
+* 🗄 MySQL Connector/J
 * ⚙️ Jenkins (CI/CD)
 
 ---
@@ -143,6 +145,110 @@ mvn test -Dsurefire.suiteXmlFiles=testng.xml
   </plugins>
 </build>
 ```
+
+---
+
+## 🗄 MySQL DB Integration
+
+Use this when you want to validate API data against MySQL or seed/clean test data before a test run.
+
+### 🔹 1. Install MySQL
+
+Choose one of these options:
+
+* macOS (Homebrew)
+
+```bash
+brew install mysql
+brew services start mysql
+```
+
+* Windows / Linux
+  Download and install MySQL Community Server from the official MySQL installer for your OS, then start the MySQL service.
+
+### 🔹 2. Create a Database and Test User
+
+```sql
+CREATE DATABASE api_automation;
+CREATE USER 'api_user'@'localhost' IDENTIFIED BY 'StrongPassword123';
+GRANT ALL PRIVILEGES ON api_automation.* TO 'api_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+If your team already has a MySQL database, you can skip the creation step and just use the existing host, port, database, username, and password.
+
+### 🔹 3. Configure Environment Variables
+
+Add the DB values to your local `.env` file or pass them as JVM system properties:
+
+```env
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_DATABASE=api_automation
+MYSQL_USERNAME=api_user
+MYSQL_PASSWORD=StrongPassword123
+MYSQL_JDBC_PARAMS=useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+```
+
+### 🔹 4. MySQL Connector Dependency
+
+The framework now includes the MySQL JDBC driver in `pom.xml`. If dependencies are not downloaded yet, run:
+
+```bash
+mvn clean compile
+```
+
+### 🔹 5. Utility Added for Direct DB Access
+
+Reusable utility:
+
+`src/main/java/com/thetestingacademy/utils/MySqlDBConnector.java`
+
+What it supports:
+
+* Create a DB connection from `.env` values
+* Build the JDBC URL automatically
+* Validate the connection
+* Run `SELECT` queries and get rows as `List<Map<String, Object>>`
+* Run `INSERT`, `UPDATE`, and `DELETE` statements
+
+### 🔹 6. Example Usage in API Automation
+
+```java
+import com.thetestingacademy.utils.MySqlDBConnector;
+
+import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
+
+public class BookingDbValidationExample {
+
+    public void validateBookingFromDb(int bookingId) {
+        try (Connection connection = MySqlDBConnector.getConnection()) {
+            List<Map<String, Object>> rows = MySqlDBConnector.executeSelect(
+                    connection,
+                    "SELECT booking_id, firstname, lastname FROM booking WHERE booking_id = ?",
+                    bookingId
+            );
+
+            if (rows.isEmpty()) {
+                throw new AssertionError("Booking record not found in MySQL for booking id: " + bookingId);
+            }
+
+            System.out.println(rows.get(0));
+        } catch (Exception e) {
+            throw new RuntimeException("DB validation failed", e);
+        }
+    }
+}
+```
+
+### 🔹 7. Common Usage Ideas
+
+* Verify API response data against MySQL records
+* Insert test data before execution
+* Clean up DB records after test completion
+* Validate audit/event rows created by an API call
 
 ---
 
