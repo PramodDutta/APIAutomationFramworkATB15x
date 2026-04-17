@@ -1,0 +1,42 @@
+framework:
+  browser: chrome
+  execution_mode: local
+  headless: false
+  remote_url: "http://localhost:4444/wd/hub"
+  selenoid:
+    video: true
+    vnc: true
+
+project1:
+  name: "VWO"
+  url: "https://app.vwo.com"
+  url_dashboard: "https://app.vwo.com/#/dashboard?accountId=1185796"
+  url_free_trial: "https://vwo.com/free-trial/"
+  expected_username: "Kishore J"
+  invalid_username: "admin@admin.com"
+  invalid_password: "Test@2024"
+  error_message: "Your email, password, IP address or location did not match"
+  invalid_error_message: "Pramod email, password, IP address or location did not match"
+
+project2:
+  name: "Orange HR"
+  username: "admin"
+  password: "Hacker@4321"
+  expected_username: "PIM"
+  url: "https://awesomeqa.com/hr/web/index.php/auth/login"
+
+project3:
+  name: "Katalon App"
+  url: "https://katalon-demo-cura.herokuapp.com/"
+
+project4:
+  name: "idrive App"
+  url: "https://www.idrive360.com/enterprise/login"
+
+project5:
+  name: "iffy App"
+  url: "https://iffy.com/sign-up"
+
+project6:
+  name: "TTA Bank"
+  url: "https://tta-bank-digital-973242068062.us-west1.run.app/"

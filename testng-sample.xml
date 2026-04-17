@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="All Test Suite">
+    <test verbose="2" preserve-order="true" name="/Users/promode/Documents/TTA/APIAutomationFramworkATB15x">
+        <classes>
+            <class name="com.thetestingacademy.tests.sample.TestHelloRA">
+                <methods>
+                    <include name="test_hello_world_positive"/>
+                    <include name="test_hello_world_negative"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+</suite>
