@@ -57,7 +57,7 @@ The framework follows a **Hybrid Framework Design** combining:
 * Page Object Model (API abstraction)
 * Data-driven testing
 * Utility-based reusable components
-
+```mermaid
 flowchart TD
     A["TestNG Test Cases"] --> B["API Layer"]
     B --> C["Request Builder"]
@@ -67,7 +67,7 @@ flowchart TD
     F --> D
     D --> G["Assertions (AssertJ)"]
     G --> H["Allure Reports"]
-
+```
 ---
 
 ## 🔄 Framework Flow
