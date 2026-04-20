@@ -15,6 +15,7 @@ A robust **API Automation Framework** built using **Rest Assured** for testing t
 * [Project Structure](#-project-structure)
 * [Setup & Execution](#-setup--execution)
 * [E2E Integration Test Flows](#-e2e-integration-test-flows)
+* [Retry Analyzer & Listeners](#-retry-analyzer--listeners)
 * [Log4j Logging](#-log4j-logging)
 * [MySQL DB Integration](#-mysql-db-integration)
 * [Parallel Execution](#-parallel-execution)
@@ -169,6 +170,7 @@ graph TD
         F --> G[base]
         F --> H[tests]
         F --> I[asserts]
+        F --> L[listeners]
 
         G --> G1[BaseTest.java]
         H --> H1[e2e_integration]
@@ -177,6 +179,9 @@ graph TD
         H1 --> H1c[TestIntegrationFlow3.java]
         H1 --> H1d[TestIntegrationFlow4.java]
         I --> I1[AssertActions.java]
+        L --> L1[RetryAnalyzer.java]
+        L --> L2[RetryListener.java]
+        L --> L3[TestListener.java]
     end
 
     subgraph src/test/resources
@@ -196,6 +201,29 @@ graph TD
 * Install Java (JDK 23+)
 * Install Maven
 * (Optional) Install MySQL for DB validation tests
+
+### 🔹 Environment Setup
+
+1. Copy the sample environment file:
+```bash
+cp .env.sample .env
+```
+
+2. Edit `.env` and fill in your credentials:
+```env
+# API Credentials
+USERNAME=your_username
+PASSWORD=your_password
+
+# MySQL (for Flow4)
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_DATABASE=api_automation
+MYSQL_USERNAME=your_db_username
+MYSQL_PASSWORD=your_db_password
+```
+
+**Important:** The `.env` file is in `.gitignore` and will NOT be committed to version control.
 
 ### 🔹 Run Commands
 
@@ -256,13 +284,38 @@ flowchart LR
 | **Flow 2** | `TestIntegrationFlow2` | 4 | Create → Verify → PATCH (firstname/lastname only) → Verify PATCH |
 | **Flow 3** | `TestIntegrationFlow3` | 3 | Create → Delete → Verify Deleted (404) |
 | **Flow 4** | `TestIntegrationFlow4` | 4 | Create → Validate in MySQL → Update → Verify Update in MySQL |
+| **Flow 5** | `TestIntegrationFlow5_DDT` | DDT | Data-Driven: Create bookings from Excel data |
+
+### Data-Driven Testing (DDT) - Flow 5
+
+Flow 5 uses **TestNG DataProvider** with **Apache POI** to read test data from Excel:
+
+```mermaid
+flowchart LR
+    A[Excel File] --> B[UtilExcel]
+    B --> C[DataProvider]
+    C --> D[Test Method]
+    D --> E[Create Booking]
+    E --> F[Verify Response]
+```
+
+**Excel Structure Required** (`src/test/resources/TestData.xlsx` - Sheet: "Booking"):
+
+| firstname | lastname | totalprice | depositpaid | checkin | checkout | additionalneeds |
+|-----------|----------|------------|-------------|---------|----------|-----------------|
+| John | Doe | 150 | true | 2024-01-01 | 2024-01-05 | Breakfast |
+| Jane | Smith | 200 | false | 2024-02-10 | 2024-02-15 | Lunch |
 
 ### TestNG Suite Configuration
 
 ```xml
 <!-- testng-e2e.xml -->
-<suite name="All Test Suite">
-    <test verbose="2" preserve-order="true" name="E2E Integration Tests">
+<suite name="E2E Integration Test Suite" verbose="2">
+    <listeners>
+        <listener class-name="com.thetestingacademy.listeners.RetryListener"/>
+        <listener class-name="com.thetestingacademy.listeners.TestListener"/>
+    </listeners>
+    <test name="E2E Integration Tests" preserve-order="true">
         <classes>
             <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow1"/>
             <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow2"/>
@@ -270,7 +323,88 @@ flowchart LR
             <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow4"/>
         </classes>
     </test>
+    <test name="Data-Driven Tests" preserve-order="true">
+        <classes>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow5_DDT"/>
+        </classes>
+    </test>
 </suite>
+```
+
+---
+
+## 🔄 Retry Analyzer & Listeners
+
+The framework includes **automatic retry** for failed tests and **comprehensive test listeners** for logging and reporting.
+
+### Retry Mechanism Flow
+
+```mermaid
+flowchart TD
+    A[Test Execution] --> B{Test Passed?}
+    B -->|Yes| C[Mark as Passed]
+    B -->|No| D{Retry Count < 3?}
+    D -->|Yes| E[Increment Retry Count]
+    E --> F[Log Retry Attempt]
+    F --> A
+    D -->|No| G[Mark as Failed]
+    G --> H[Log Final Failure]
+```
+
+### Listeners
+
+| Listener | Class | Description |
+|----------|-------|-------------|
+| **RetryListener** | `IAnnotationTransformer` | Automatically applies RetryAnalyzer to all test methods |
+| **RetryAnalyzer** | `IRetryAnalyzer` | Retries failed tests up to 3 times |
+| **TestListener** | `ITestListener` | Logs test start, pass, fail, skip events |
+
+### RetryAnalyzer Implementation
+
+```java
+public class RetryAnalyzer implements IRetryAnalyzer {
+    private static final int MAX_RETRY_COUNT = 3;
+    private int retryCount = 0;
+
+    @Override
+    public boolean retry(ITestResult result) {
+        if (retryCount < MAX_RETRY_COUNT) {
+            retryCount++;
+            logger.warn("Retrying test '{}' - Attempt {} of {}",
+                    result.getName(), retryCount, MAX_RETRY_COUNT);
+            return true;
+        }
+        return false;
+    }
+}
+```
+
+### TestListener Events
+
+```mermaid
+sequenceDiagram
+    participant Suite as Test Suite
+    participant Listener as TestListener
+    participant Test as Test Method
+    participant Log as Log4j
+
+    Suite->>Listener: onStart()
+    Listener->>Log: "Suite Started"
+
+    loop For Each Test
+        Listener->>Log: onTestStart() - "Test Started"
+        Test->>Test: Execute
+        alt Test Passed
+            Listener->>Log: onTestSuccess() - "Test Passed (Duration)"
+        else Test Failed
+            Listener->>Log: onTestFailure() - "Test Failed + Reason"
+        else Test Skipped
+            Listener->>Log: onTestSkipped() - "Test Skipped"
+        end
+    end
+
+    Suite->>Listener: onFinish()
+    Listener->>Log: "Suite Finished (Passed/Failed/Skipped counts)"
 ```
 
 ---

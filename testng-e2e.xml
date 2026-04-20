@@ -1,16 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
-<suite name="All Test Suite">
-    <test verbose="2" preserve-order="true" name="/Users/promode/Documents/TTA/APIAutomationFramworkATB15x">
+<suite name="E2E Integration Test Suite" verbose="2">
+
+    <listeners>
+        <listener class-name="com.thetestingacademy.listeners.RetryListener"/>
+        <listener class-name="com.thetestingacademy.listeners.TestListener"/>
+    </listeners>
+
+    <test name="E2E Integration Tests" preserve-order="true">
         <classes>
-            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow1">
-            </class>
-            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow2">
-            </class>
-            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow3">
-            </class>
-            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow4">
-            </class>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow1"/>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow2"/>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow3"/>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow4"/>
         </classes>
     </test>
+
+    <test name="Data-Driven Tests" preserve-order="true">
+        <classes>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow5_DDT"/>
+        </classes>
+    </test>
+
 </suite>

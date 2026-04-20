@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
-<suite name="All Test Suite">
-    <test verbose="2" preserve-order="true" name="/Users/promode/Documents/TTA/APIAutomationFramworkATB15x">
+<suite name="Sample Test Suite" verbose="2">
+
+    <listeners>
+        <listener class-name="com.thetestingacademy.listeners.RetryListener"/>
+        <listener class-name="com.thetestingacademy.listeners.TestListener"/>
+    </listeners>
+
+    <test name="Sample Tests" preserve-order="true">
         <classes>
             <class name="com.thetestingacademy.tests.sample.TestHelloRA">
                 <methods>
@@ -11,4 +17,5 @@
             </class>
         </classes>
     </test>
+
 </suite>

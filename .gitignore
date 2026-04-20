@@ -36,3 +36,16 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Environment Variables ###
+.env
+.env.local
+.env.*.local
+
+### Logs ###
+logs/
+*.log
+
+### Allure Results ###
+allure-results/
+allure-report/
