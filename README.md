@@ -21,6 +21,7 @@ A robust **API Automation Framework** built using **Rest Assured** for testing t
 * [Parallel Execution](#-parallel-execution)
 * [Allure Reporting](#-allure-reporting)
 * [CI/CD Integration](#-cicd-integration)
+* [JSON Schema Validation](#-json-schema-validation)
 * [Best Practices](#-best-practices)
 
 ---
@@ -44,7 +45,7 @@ This framework is designed to:
 | Category | Technology |
 |----------|------------|
 | Language | Java (JDK 23+) |
-| API Testing | Rest Assured 6.0.0 |
+| API Testing | Rest Assured 6.0.0, JSON Schema Validator 5.4.0 |
 | Test Framework | TestNG 7.12.0 |
 | Build Tool | Maven |
 | Assertions | AssertJ 3.27.7 |
@@ -612,6 +613,64 @@ flowchart TD
 
 ---
 
+## 🔍 JSON Schema Validation
+
+The framework includes **JSON Schema validation** to automatically validate API response structures against predefined schemas.
+
+### Schema Files
+
+Located in `src/test/resources/schemas/`:
+
+| Schema File | Description |
+|-------------|-------------|
+| `booking-schema.json` | Validates GET booking response |
+| `booking-response-schema.json` | Validates POST booking creation response |
+| `token-response-schema.json` | Validates authentication token response |
+| `error-response-schema.json` | Validates error responses |
+
+### Validation Flow
+
+```mermaid
+flowchart LR
+    A[API Response] --> B[SchemaValidator]
+    B --> C[Load JSON Schema]
+    C --> D{Schema Valid?}
+    D -->|Yes| E[Test Passes]
+    D -->|No| F[Assertion Error with Details]
+```
+
+### Usage Examples
+
+```java
+// Using convenience methods in AssertActions
+assertActions.verifyBookingResponseSchema(response);
+assertActions.verifyTokenResponseSchema(response);
+assertActions.verifyBookingSchema(response);
+
+// Using generic method with custom schema file
+assertActions.verifyResponseSchema(response, "booking-schema.json");
+
+// Check validity without throwing exception
+boolean isValid = SchemaValidator.isValidSchema(response, SchemaValidator.Schemas.BOOKING_RESPONSE);
+```
+
+### Schema Validation Test Class
+
+Run schema validation tests:
+
+```bash
+mvn test -Dtest=TestSchemaValidation
+```
+
+**Tests included:**
+- `testBookingResponseSchema()` - Validates booking creation response
+- `testTokenResponseSchema()` - Validates token response
+- `testBookingSchema()` - Validates GET booking response
+- `testInvalidSchemaFails()` - Verifies invalid schema detection
+- `testGenericSchemaValidation()` - Tests generic validation method
+
+---
+
 ## 🧠 Best Practices
 
 * Use **POJOs for request/response modeling** - `Booking`, `PartialBookingUpdate`, `Auth`
@@ -645,7 +704,8 @@ flowchart TD
 This framework provides a **scalable, maintainable, and production-ready solution** for API automation with:
 
 * Clean architecture with separation of concerns
-* 4 comprehensive E2E integration test flows
+* 5 comprehensive E2E integration test flows (including DDT)
+* JSON Schema validation for API response structure verification
 * Log4j2 logging for debugging and traceability
 * MySQL database validation support
 * Powerful Allure reporting
