@@ -1,6 +1,6 @@
 # 🚀 API Automation Framework – Rest Assured (Java)
 
-### ✍️ Author: Prrammod Dutta
+### ✍️ Author: Pramod Dutta
 
 A robust **API Automation Framework** built using **Rest Assured** for testing the CRUD operations of the **Restful Booker API**. This framework follows a **hybrid design pattern**, integrates CI/CD pipelines, and generates rich **Allure Reports**.
 
@@ -14,12 +14,12 @@ A robust **API Automation Framework** built using **Rest Assured** for testing t
 * [Framework Flow](#-framework-flow)
 * [Project Structure](#-project-structure)
 * [Setup & Execution](#-setup--execution)
+* [E2E Integration Test Flows](#-e2e-integration-test-flows)
+* [Log4j Logging](#-log4j-logging)
 * [MySQL DB Integration](#-mysql-db-integration)
 * [Parallel Execution](#-parallel-execution)
-* [Integration Tests](#-integration-tests)
 * [Allure Reporting](#-allure-reporting)
 * [CI/CD Integration](#-cicd-integration)
-* [Test Scenarios](#-test-scenarios)
 * [Best Practices](#-best-practices)
 
 ---
@@ -33,22 +33,27 @@ This framework is designed to:
 * Support **parallel execution**
 * Integrate with **CI/CD pipelines**
 * Generate **detailed reports with Allure**
+* Validate API responses against **MySQL Database**
+* Provide comprehensive **Log4j logging**
 
 ---
 
 ## 🛠 Tech Stack
 
-* ☕ Java (JDK > 23)
-* 🔗 Rest Assured
-* 🧪 TestNG
-* 📦 Maven
-* 📊 Apache POI (for test data)
-* 🔍 AssertJ (advanced assertions)
-* 🔄 Jackson API & GSON (JSON parsing)
-* 🪵 Log4j (logging)
-* 📈 Allure Reports
-* 🗄 MySQL Connector/J
-* ⚙️ Jenkins (CI/CD)
+| Category | Technology |
+|----------|------------|
+| Language | Java (JDK 23+) |
+| API Testing | Rest Assured 6.0.0 |
+| Test Framework | TestNG 7.12.0 |
+| Build Tool | Maven |
+| Assertions | AssertJ 3.27.7 |
+| JSON Parsing | GSON 2.13.2 |
+| Logging | Log4j2 2.23.1 |
+| Reporting | Allure TestNG 2.33.0 |
+| Test Data | Apache POI 5.3.0, JavaFaker 1.0.2 |
+| Database | MySQL Connector/J 9.3.0 |
+| Config | dotenv-java 3.0.0, SnakeYAML 2.2 |
+| CI/CD | Jenkins |
 
 ---
 
@@ -56,20 +61,55 @@ This framework is designed to:
 
 The framework follows a **Hybrid Framework Design** combining:
 
-* Page Object Model (API abstraction)
-* Data-driven testing
+* API abstraction layer
+* Data-driven testing with POJOs
 * Utility-based reusable components
+* Log4j logging throughout
+
 ```mermaid
 flowchart TD
-    A["TestNG Test Cases"] --> B["API Layer"]
-    B --> C["Request Builder"]
-    B --> D["Response Handler"]
-    C --> E["Rest Assured Client"]
-    E --> F["API Server"]
-    F --> D
-    D --> G["Assertions (AssertJ)"]
-    G --> H["Allure Reports"]
+    subgraph TestLayer["Test Layer"]
+        A["TestNG Test Classes"]
+        A1["TestIntegrationFlow1"]
+        A2["TestIntegrationFlow2"]
+        A3["TestIntegrationFlow3"]
+        A4["TestIntegrationFlow4"]
+    end
+
+    subgraph CoreLayer["Core Layer"]
+        B["BaseTest"]
+        C["PayloadManager"]
+        D["AssertActions"]
+    end
+
+    subgraph DataLayer["Data Layer"]
+        E["POJOs"]
+        F["APIConstants"]
+    end
+
+    subgraph UtilLayer["Utility Layer"]
+        G["MySqlDBConnector"]
+        H["EnvUtil"]
+        I["Log4j Logger"]
+    end
+
+    subgraph External["External Systems"]
+        J["REST API Server"]
+        K["MySQL Database"]
+        L["Allure Reports"]
+    end
+
+    A --> A1 & A2 & A3 & A4
+    A1 & A2 & A3 & A4 --> B
+    B --> C & D
+    C --> E
+    B --> F
+    B --> G & H & I
+    C --> J
+    G --> K
+    D --> L
 ```
+
 ---
 
 ## 🔄 Framework Flow
@@ -77,18 +117,26 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     participant Test as TestNG Test
-    participant API as API Layer
+    participant Base as BaseTest
+    participant PM as PayloadManager
     participant RA as Rest Assured
     participant Server as API Server
+    participant DB as MySQL DB
+    participant Log as Log4j
     participant Report as Allure
 
-    Test->>API: Build Request
-    API->>RA: Send HTTP Request
-    RA->>Server: API Call
-    Server-->>RA: Response
-    RA-->>API: Parsed Response
-    API-->>Test: Return Data
-    Test->>Report: Log Results
+    Test->>Log: Log test start
+    Test->>Base: Setup (BeforeClass)
+    Base->>PM: Initialize PayloadManager
+    Test->>PM: Create Request Payload
+    PM->>RA: Build Request
+    RA->>Server: HTTP Request (POST/GET/PUT/PATCH/DELETE)
+    Server-->>RA: HTTP Response
+    RA-->>Test: Parsed Response
+    Test->>DB: Validate in Database (Flow4)
+    DB-->>Test: DB Records
+    Test->>Log: Log assertions
+    Test->>Report: Record Results
 ```
 
 ---
@@ -97,19 +145,46 @@ sequenceDiagram
 
 ```mermaid
 graph TD
-    A[src/test/java] --> B[tests]
-    A --> C[api]
-    A --> D[utils]
-    A --> E[base]
-    A --> F[pojos]
-    A --> G[constants]
+    subgraph src/main/java
+        A[com.thetestingacademy]
+        A --> B[endpoints]
+        A --> C[modules]
+        A --> D[pojos]
+        A --> E[utils]
 
-    B --> B1[Test Cases]
-    C --> C1[API Methods]
-    D --> D1[Reusable Utilities]
-    E --> E1[Base Test Setup]
-    F --> F1[Request/Response Models]
-    G --> G1[Framework Constants]
+        B --> B1[APIConstants.java]
+        C --> C1[PayloadManager.java]
+        C --> C2[vwo/VWOPayloadManager.java]
+        D --> D1[requestPOJOs]
+        D --> D2[responsePojos]
+        D1 --> D1a[Booking.java]
+        D1 --> D1b[PartialBookingUpdate.java]
+        D1 --> D1c[Auth.java]
+        E --> E1[MySqlDBConnector.java]
+        E --> E2[EnvUtil.java]
+    end
+
+    subgraph src/test/java
+        F[com.thetestingacademy]
+        F --> G[base]
+        F --> H[tests]
+        F --> I[asserts]
+
+        G --> G1[BaseTest.java]
+        H --> H1[e2e_integration]
+        H1 --> H1a[TestIntegrationFlow1.java]
+        H1 --> H1b[TestIntegrationFlow2.java]
+        H1 --> H1c[TestIntegrationFlow3.java]
+        H1 --> H1d[TestIntegrationFlow4.java]
+        I --> I1[AssertActions.java]
+    end
+
+    subgraph src/test/resources
+        J[Resources]
+        J --> J1[log4j2.xml]
+        J --> J2[config.yaml]
+        J --> J3[data.properties]
+    end
 ```
 
 ---
@@ -120,30 +195,148 @@ graph TD
 
 * Install Java (JDK 23+)
 * Install Maven
+* (Optional) Install MySQL for DB validation tests
 
-### 🔹 Run Tests
+### 🔹 Run Commands
 
 ```bash
-mvn test -Dsurefire.suiteXmlFiles=testng.xml
+# Run all tests with default suite
+mvn test
+
+# Run E2E integration tests
+mvn test -Dsurefire.suiteXmlFiles=testng-e2e.xml
+
+# Run sample tests
+mvn test -Dsurefire.suiteXmlFiles=testng-sample.xml
+
+# Run a specific test class
+mvn test -Dtest=com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow1
+
+# Compile without running tests
+mvn clean compile
 ```
 
-### 🔹 Add Maven Surefire Plugin
+---
+
+## 🔗 E2E Integration Test Flows
+
+The framework includes **4 comprehensive E2E integration test flows**:
+
+```mermaid
+flowchart LR
+    subgraph Flow1["Flow 1: Full CRUD"]
+        F1A[Create Booking] --> F1B[Verify Booking]
+        F1B --> F1C[Update - PUT]
+        F1C --> F1D[Delete Booking]
+    end
+
+    subgraph Flow2["Flow 2: Partial Update"]
+        F2A[Create Booking] --> F2B[Verify Booking]
+        F2B --> F2C[Update - PATCH]
+        F2C --> F2D[Verify PATCH]
+    end
+
+    subgraph Flow3["Flow 3: Create & Delete"]
+        F3A[Create Booking] --> F3B[Delete Immediately]
+        F3B --> F3C[Verify 404]
+    end
+
+    subgraph Flow4["Flow 4: DB Validation"]
+        F4A[Create Booking] --> F4B[Validate in DB]
+        F4B --> F4C[Update Booking]
+        F4C --> F4D[Verify Update in DB]
+    end
+```
+
+### Test Flow Details
+
+| Flow | Class | Steps | Description |
+|------|-------|-------|-------------|
+| **Flow 1** | `TestIntegrationFlow1` | 4 | Create → Verify → PUT Update → Delete |
+| **Flow 2** | `TestIntegrationFlow2` | 4 | Create → Verify → PATCH (firstname/lastname only) → Verify PATCH |
+| **Flow 3** | `TestIntegrationFlow3` | 3 | Create → Delete → Verify Deleted (404) |
+| **Flow 4** | `TestIntegrationFlow4` | 4 | Create → Validate in MySQL → Update → Verify Update in MySQL |
+
+### TestNG Suite Configuration
 
 ```xml
-<build>
-  <plugins>
-    <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-surefire-plugin</artifactId>
-      <version>3.3.0</version>
-      <configuration>
-        <suiteXmlFiles>
-          <suiteXmlFile>${suiteXmlFile}</suiteXmlFile>
-        </suiteXmlFiles>
-      </configuration>
-    </plugin>
-  </plugins>
-</build>
+<!-- testng-e2e.xml -->
+<suite name="All Test Suite">
+    <test verbose="2" preserve-order="true" name="E2E Integration Tests">
+        <classes>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow1"/>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow2"/>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow3"/>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow4"/>
+        </classes>
+    </test>
+</suite>
+```
+
+---
+
+## 🪵 Log4j Logging
+
+The framework uses **Log4j2** for comprehensive logging throughout test execution.
+
+### Log Configuration
+
+Located at `src/test/resources/log4j2.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1} - %m%n"/>
+        </Console>
+        <File name="FileLogger" fileName="logs/test.log">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1} - %m%n"/>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileLogger"/>
+        </Root>
+    </Loggers>
+</Configuration>
+```
+
+### Logging Flow
+
+```mermaid
+flowchart LR
+    subgraph Sources["Log Sources"]
+        A[BaseTest]
+        B[Test Classes]
+        C[Utilities]
+    end
+
+    subgraph Log4j["Log4j2"]
+        D[Logger]
+    end
+
+    subgraph Outputs["Outputs"]
+        E[Console]
+        F[logs/test.log]
+    end
+
+    A & B & C --> D
+    D --> E & F
+```
+
+### Usage in Tests
+
+```java
+// In BaseTest (inherited by all test classes)
+protected static final Logger logger = LogManager.getLogger(BaseTest.class);
+
+// Example logging
+logger.info("=== TC#INT1 - Step 1: Creating Booking ===");
+logger.info("Booking created successfully with ID: {}", bookingid);
+logger.debug("Auth payload: {}", payload);
+logger.error("Database validation failed: {}", e.getMessage());
 ```
 
 ---
@@ -152,34 +345,26 @@ mvn test -Dsurefire.suiteXmlFiles=testng.xml
 
 Use this when you want to validate API data against MySQL or seed/clean test data before a test run.
 
-### 🔹 1. Install MySQL
+### DB Validation Flow
 
-Choose one of these options:
+```mermaid
+sequenceDiagram
+    participant Test as Test Class
+    participant API as REST API
+    participant DB as MySQL Database
+    participant Assert as AssertJ
 
-* macOS (Homebrew)
-
-```bash
-brew install mysql
-brew services start mysql
+    Test->>API: POST /booking
+    API-->>Test: BookingResponse (ID: 123)
+    Test->>DB: SELECT * FROM booking WHERE id = 123
+    DB-->>Test: DB Record
+    Test->>Assert: Compare API response with DB record
+    Assert-->>Test: Validation Result
 ```
 
-* Windows / Linux
-  Download and install MySQL Community Server from the official MySQL installer for your OS, then start the MySQL service.
+### Configure Environment Variables
 
-### 🔹 2. Create a Database and Test User
-
-```sql
-CREATE DATABASE api_automation;
-CREATE USER 'api_user'@'localhost' IDENTIFIED BY 'StrongPassword123';
-GRANT ALL PRIVILEGES ON api_automation.* TO 'api_user'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-If your team already has a MySQL database, you can skip the creation step and just use the existing host, port, database, username, and password.
-
-### 🔹 3. Configure Environment Variables
-
-Add the DB values to your local `.env` file or pass them as JVM system properties:
+Add the DB values to your local `.env` file:
 
 ```env
 MYSQL_HOST=localhost
@@ -190,65 +375,26 @@ MYSQL_PASSWORD=StrongPassword123
 MYSQL_JDBC_PARAMS=useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
 ```
 
-### 🔹 4. MySQL Connector Dependency
-
-The framework now includes the MySQL JDBC driver in `pom.xml`. If dependencies are not downloaded yet, run:
-
-```bash
-mvn clean compile
-```
-
-### 🔹 5. Utility Added for Direct DB Access
-
-Reusable utility:
-
-`src/main/java/com/thetestingacademy/utils/MySqlDBConnector.java`
-
-What it supports:
-
-* Create a DB connection from `.env` values
-* Build the JDBC URL automatically
-* Validate the connection
-* Run `SELECT` queries and get rows as `List<Map<String, Object>>`
-* Run `INSERT`, `UPDATE`, and `DELETE` statements
-
-### 🔹 6. Example Usage in API Automation
+### Example: TestIntegrationFlow4
 
 ```java
-import com.thetestingacademy.utils.MySqlDBConnector;
+@Test(groups = "qa", priority = 2)
+@Description("TC#INT4 - Validate Booking exists in MySQL Database")
+public void testValidateBookingInDatabase(ITestContext iTestContext) {
+    Integer bookingid = (Integer) iTestContext.getAttribute("bookingid");
 
-import java.sql.Connection;
-import java.util.List;
-import java.util.Map;
+    try (Connection connection = MySqlDBConnector.getConnection()) {
+        List<Map<String, Object>> rows = MySqlDBConnector.executeSelect(
+            connection,
+            "SELECT booking_id, firstname, lastname FROM booking WHERE booking_id = ?",
+            bookingid
+        );
 
-public class BookingDbValidationExample {
-
-    public void validateBookingFromDb(int bookingId) {
-        try (Connection connection = MySqlDBConnector.getConnection()) {
-            List<Map<String, Object>> rows = MySqlDBConnector.executeSelect(
-                    connection,
-                    "SELECT booking_id, firstname, lastname FROM booking WHERE booking_id = ?",
-                    bookingId
-            );
-
-            if (rows.isEmpty()) {
-                throw new AssertionError("Booking record not found in MySQL for booking id: " + bookingId);
-            }
-
-            System.out.println(rows.get(0));
-        } catch (Exception e) {
-            throw new RuntimeException("DB validation failed", e);
-        }
+        assertThat(rows).isNotEmpty();
+        assertThat(rows.get(0).get("firstname")).isEqualTo(expectedFirstname);
     }
 }
 ```
-
-### 🔹 7. Common Usage Ideas
-
-* Verify API response data against MySQL records
-* Insert test data before execution
-* Clean up DB records after test completion
-* Validate audit/event rows created by an API call
 
 ---
 
@@ -257,72 +403,36 @@ public class BookingDbValidationExample {
 Run tests in parallel using TestNG:
 
 ```xml
-<suite name="All Test Suite" parallel="methods" thread-count="2">
+<suite name="All Test Suite" parallel="classes" thread-count="3">
 ```
 
 ### Execution Flow
 
 ```mermaid
-graph LR
-    A[Test Suite] --> B[Test 1]
-    A --> C[Test 2]
-    B --> D[Thread 1]
-    C --> E[Thread 2]
+graph TD
+    A[Test Suite] --> B[Thread Pool]
+    B --> C[Thread 1: Flow1]
+    B --> D[Thread 2: Flow2]
+    B --> E[Thread 3: Flow3]
+    C & D & E --> F[Aggregate Results]
+    F --> G[Allure Report]
 ```
-
----
-
-## 🔗 Integration Tests
-
-Run full integration suite:
-
-```bash
-mvn clean test -DsuiteXmlFile=testng-integration.xml
-```
-
-### Covered Scenarios:
-
-* Create Booking
-* Generate Token
-* Update Booking
-* Delete Booking
-* Validate End-to-End Flow
 
 ---
 
 ## 📊 Allure Reporting
 
-### 🔹 Install Allure
+### Install Allure
 
 ```bash
 brew install allure
 ```
 
-### 🔹 Add Dependency
-
-```xml
-<dependency>
-    <groupId>io.qameta.allure</groupId>
-    <artifactId>allure-testng</artifactId>
-    <version>2.13.0</version>
-</dependency>
-```
-
-### 🔹 Add Plugin
-
-```xml
-<plugin>
-    <groupId>io.qameta.allure</groupId>
-    <artifactId>allure-maven</artifactId>
-    <version>2.10.0</version>
-</plugin>
-```
-
-### 🔹 Generate Report
+### Generate Report
 
 ```bash
 mvn clean test
-allure generate target/allure-results --clean -o allure-report
+allure generate allure-results --clean -o allure-report
 allure open allure-report
 ```
 
@@ -330,9 +440,22 @@ allure open allure-report
 
 ```mermaid
 flowchart LR
-    A[Test Execution] --> B[Allure Results]
-    B --> C[Generate Report]
-    C --> D[HTML Dashboard]
+    A[Test Execution] --> B[allure-results/]
+    B --> C[allure generate]
+    C --> D[allure-report/]
+    D --> E[allure open]
+    E --> F[HTML Dashboard]
+```
+
+### Allure Annotations Used
+
+```java
+@Owner("Promode")
+@Description("TC#INT1 - Step 1. Verify that the Booking can be Created")
+@Test(groups = "qa", priority = 1)
+public void testCreateBooking(ITestContext iTestContext) {
+    // test implementation
+}
 ```
 
 ---
@@ -344,53 +467,26 @@ This framework supports Jenkins pipeline execution.
 ```mermaid
 flowchart TD
     A[Code Commit] --> B[Jenkins Pipeline]
-    B --> C[Build]
-    C --> D[Run Tests]
-    D --> E[Generate Report]
-    E --> F[Publish Results]
+    B --> C[Checkout Code]
+    C --> D[mvn clean compile]
+    D --> E[mvn test -Dsurefire.suiteXmlFiles=testng-e2e.xml]
+    E --> F[Generate Allure Report]
+    F --> G{Tests Passed?}
+    G -->|Yes| H[Deploy/Notify Success]
+    G -->|No| I[Notify Failure]
 ```
-
----
-
-## 🧪 Test Scenarios
-
-### ✅ CRUD Operations
-
-1. Create Booking → Update → Verify
-2. Create Booking → Delete → Verify عدم existence
-3. Get Booking → Update → Validate
-4. Create → Delete Flow
-5. Invalid Payload Testing
-6. Update Deleted Resource
-
----
-
-### 📬 Postman Assignments
-
-* Create Collections for:
-
-    * RESTful Booker CRUD
-    * Add test scripts
-    * Integration scenarios
-
----
-
-### 🔍 Validation Checks
-
-* ✅ Response Body
-* ✅ Status Code
-* ✅ Headers
 
 ---
 
 ## 🧠 Best Practices
 
-* Use **POJOs for request/response modeling**
-* Keep **test data separate**
-* Use **centralized configuration**
-* Implement **logging for debugging**
-* Add **assertion layers**
-* Maintain **clean folder structure**
+* Use **POJOs for request/response modeling** - `Booking`, `PartialBookingUpdate`, `Auth`
+* Keep **test data separate** with PayloadManager
+* Use **centralized configuration** via `APIConstants` and `EnvUtil`
+* Implement **Log4j logging** for debugging and traceability
+* Add **assertion layers** with `AssertActions` and AssertJ
+* Use **ITestContext** for sharing state between ordered test methods
+* Maintain **clean folder structure** - POJOs, modules, utils, tests
 
 ---
 
@@ -414,16 +510,10 @@ flowchart TD
 
 This framework provides a **scalable, maintainable, and production-ready solution** for API automation with:
 
-* Clean architecture
-* Powerful reporting
-* CI/CD readiness
+* Clean architecture with separation of concerns
+* 4 comprehensive E2E integration test flows
+* Log4j2 logging for debugging and traceability
+* MySQL database validation support
+* Powerful Allure reporting
+* CI/CD readiness with Jenkins
 * Extensibility for future enhancements
-
----
-
-If you want, I can also:
-
-* Add badges (build status, coverage)
-* Improve GitHub UI sections
-* Add sample test cases or code snippets
-* Convert this into a portfolio-ready project README

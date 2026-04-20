@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="All Test Suite">
+    <test verbose="2" preserve-order="true" name="/Users/promode/Documents/TTA/APIAutomationFramworkATB15x">
+        <classes>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow1">
+            </class>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow2">
+            </class>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow3">
+            </class>
+            <class name="com.thetestingacademy.tests.e2e_integration.TestIntegrationFlow4">
+            </class>
+        </classes>
+    </test>
+</suite>
