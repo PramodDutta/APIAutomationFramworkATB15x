@@ -26,6 +26,14 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Source: https://mvnrepository.com/artifact/io.rest-assured/json-schema-validator -->
+    <dependency>
+      <groupId>io.rest-assured</groupId>
+      <artifactId>json-schema-validator</artifactId>
+      <version>5.4.0</version>
+      <scope>test</scope>
+    </dependency>
+
     <!-- Source: https://mvnrepository.com/artifact/org.testng/testng -->
     <dependency>
       <groupId>org.testng</groupId>

@@ -32,6 +32,9 @@ public class TestIntegrationFlow1 extends BaseTest {
         validatableResponse = response.then().log().all();
         validatableResponse.statusCode(200);
 
+        // Validate response schema
+        assertActions.verifyBookingResponseSchema(response);
+
         BookingResponse bookingResponse = payloadManager.bookingResponseJava_DeSerialization(response.asString());
         assertActions.verifyStringKey(bookingResponse.getBooking().getFirstname(), "Lucky");
         assertActions.verifyStringKeyNotNull(bookingResponse.getBookingid());
@@ -57,6 +60,9 @@ public class TestIntegrationFlow1 extends BaseTest {
 
         validatableResponse = response.then().log().all();
         validatableResponse.statusCode(200);
+
+        // Validate response schema
+        assertActions.verifyBookingSchema(response);
 
         Booking booking = payloadManager.getResponseFromJSON(response.asString());
         assertActions.verifyStringKeyNotNull(booking.getFirstname());

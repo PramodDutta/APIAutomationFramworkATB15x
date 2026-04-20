@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TokenResponse",
+  "description": "Schema for authentication token response",
+  "type": "object",
+  "required": ["token"],
+  "properties": {
+    "token": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9]+$"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ErrorResponse",
+  "description": "Schema for API error responses",
+  "type": "object",
+  "oneOf": [
+    {
+      "required": ["reason"],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "required": ["error"],
+      "properties": {
+        "error": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  ]
+}

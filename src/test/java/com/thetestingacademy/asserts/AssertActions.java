@@ -1,4 +1,6 @@
 package com.thetestingacademy.asserts;
+
+import com.thetestingacademy.utils.SchemaValidator;
 import io.restassured.response.Response;
 
 import static org.testng.Assert.assertEquals;
@@ -34,5 +36,26 @@ public class AssertActions {
     public void verifyTrue(boolean keyExpect){
         // Test NG
         assertTrue(keyExpect);
+    }
+
+    // Schema Validation Methods
+    public void verifyResponseSchema(Response response, String schemaFile) {
+        SchemaValidator.validateSchema(response, schemaFile);
+    }
+
+    public void verifyBookingResponseSchema(Response response) {
+        SchemaValidator.validateSchema(response, SchemaValidator.Schemas.BOOKING_RESPONSE);
+    }
+
+    public void verifyBookingSchema(Response response) {
+        SchemaValidator.validateSchema(response, SchemaValidator.Schemas.BOOKING);
+    }
+
+    public void verifyTokenResponseSchema(Response response) {
+        SchemaValidator.validateSchema(response, SchemaValidator.Schemas.TOKEN_RESPONSE);
+    }
+
+    public void verifyErrorResponseSchema(Response response) {
+        SchemaValidator.validateSchema(response, SchemaValidator.Schemas.ERROR_RESPONSE);
     }
 }
