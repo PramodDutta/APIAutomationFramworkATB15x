@@ -1,4 +1,4 @@
-package com.thetestingacademy.pojos.vwo;
+package com.thetestingacademy.pojos.vwo.responsePojo;
 
 
 import com.google.gson.annotations.SerializedName;

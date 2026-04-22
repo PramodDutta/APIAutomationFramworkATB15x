@@ -1,0 +1,13 @@
+{
+  "name": "atb-dashboard-ingest",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ingest": "node ingest.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "fast-xml-parser": "^4.5.0"
+  }
+}

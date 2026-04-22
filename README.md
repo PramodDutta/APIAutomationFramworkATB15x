@@ -56,6 +56,7 @@ This framework is designed to:
 | Database | MySQL Connector/J 9.3.0 |
 | Config | dotenv-java 3.0.0, SnakeYAML 2.2 |
 | CI/CD | Jenkins |
+| Dashboard | React + Vite + Recharts, Express + SQLite (see `dashboard/`) |
 
 ---
 
@@ -696,6 +697,50 @@ mvn test -Dtest=TestSchemaValidation
 ### Allure Report
 
 ![Allure](https://github.com/PramodDutta/APIAutomationFramworkATB6x/assets/1409610/79ba2093-a1b7-4b36-ba16-9a6827af7afe)
+
+---
+
+## 📊 Test Results Dashboard
+
+A lightweight React + SQLite dashboard that ingests Surefire output and visualises pass/fail counts, per-run drilldowns, daily trends, and top failing tests behind a login. Full instructions: [`dashboard/README.md`](dashboard/README.md).
+
+```bash
+# One-time install
+cd dashboard/backend  && npm install
+cd dashboard/frontend && npm install
+cd dashboard/ingest   && npm install
+
+# Run it
+cd dashboard/backend  && npm start     # http://localhost:4000
+cd dashboard/frontend && npm run dev   # http://localhost:5180 (admin / admin123)
+
+# Feed a new run into the DB after any mvn test
+node dashboard/ingest/ingest.js
+```
+
+The ingest script parses `target/surefire-reports/testng-results.xml` and writes a new run record (plus per-test rows) into `dashboard/backend/data/dashboard.sqlite`. The dashboard auto-refreshes every 15 seconds.
+
+---
+
+## 🤖 Groq Chat Completions Module
+
+A second API project mirroring the VWO pattern covers Groq's OpenAI-compatible `chat.completions` endpoint:
+
+| Location | Purpose |
+|---|---|
+| `endpoints/APIConstants.java` | `GROQ_BASE_URL`, `GROQ_CHAT_COMPLETIONS_URL`, `GROQ_DEFAULT_MODEL` |
+| `pojos/groq/requestPOJO/` | `ChatCompletionRequest`, `Message` |
+| `pojos/groq/responsePojo/` | `ChatCompletionResponse`, `Choice`, `ChatMessage`, `Usage`, `GroqErrorResponse` |
+| `modules/groq/GroqPayloadManager.java` | Gson ser/deser for request/response/error |
+| `tests/individual/groq/TestGroqChatCompletion.java` | Positive + invalid-key negative tests |
+
+Set `GROQ_API_KEY` in `.env` (see `.env.sample`), then:
+
+```bash
+mvn test -Dtest=TestGroqChatCompletion
+```
+
+The key is read via `EnvUtil.getGroqApiKey()` and is never hardcoded.
 
 ---
 

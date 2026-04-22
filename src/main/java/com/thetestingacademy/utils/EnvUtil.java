@@ -15,9 +15,13 @@ public class EnvUtil {
         return getRequired("PASSWORD");
     }
 
+    public static String getGroqApiKey() {
+        return getRequired("GROQ_API_KEY");
+    }
+
     public static String getRequired(String key) {
         String value = resolve(key);
-        if (value == null || value.isBlank()) {
+        if (value == null) {
             throw new IllegalStateException("Missing required env variable: " + key);
         }
         return value;
@@ -25,22 +29,22 @@ public class EnvUtil {
 
     public static String getOptional(String key, String defaultValue) {
         String value = resolve(key);
-        return value == null || value.isBlank() ? defaultValue : value;
+        return value == null ? defaultValue : value;
     }
 
     private static String resolve(String key) {
         String systemPropertyValue = System.getProperty(key);
-        if (systemPropertyValue != null && !systemPropertyValue.isBlank()) {
+        if (systemPropertyValue != null) {
             return systemPropertyValue;
         }
 
         String envValue = System.getenv(key);
-        if (envValue != null && !envValue.isBlank()) {
+        if (envValue != null) {
             return envValue;
         }
 
         String dotenvValue = dotenv.get(key);
-        if (dotenvValue != null && !dotenvValue.isBlank()) {
+        if (dotenvValue != null) {
             return dotenvValue;
         }
 

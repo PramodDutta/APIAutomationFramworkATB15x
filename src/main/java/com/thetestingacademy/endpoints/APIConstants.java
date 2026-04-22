@@ -17,4 +17,9 @@ public class APIConstants {
     // Project #3
     public static String BASE_URL_PROJECT_3 = "";
     public static String UPDATE_STATUS  = "/api/v1/trip/update-status";
+
+    // Project #4 - Groq Chat Completions (OpenAI-compatible)
+    public static String GROQ_BASE_URL  = "https://api.groq.com";
+    public static String GROQ_CHAT_COMPLETIONS_URL = "/openai/v1/chat/completions";
+    public static String GROQ_DEFAULT_MODEL = "openai/gpt-oss-120b";
 }
